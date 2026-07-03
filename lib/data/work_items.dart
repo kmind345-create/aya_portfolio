@@ -18,6 +18,38 @@ extension WorkCategoryLabel on WorkCategory {
         return 'Visual Design';
     }
   }
+
+  /// Fallback gradient + icon shown behind a project card when it has no
+  /// artwork attached yet (e.g. a freshly-added project from /admin).
+  List<Color> get gradient {
+    switch (this) {
+      case WorkCategory.illustration:
+        return [AppColors.violetDeep, AppColors.violetMid];
+      case WorkCategory.logo:
+        return [AppColors.violetPop, AppColors.violetDeep];
+      case WorkCategory.packaging:
+        return [AppColors.orchid, AppColors.violetLight];
+      case WorkCategory.visualIdentity:
+        return [AppColors.violetLight, AppColors.bgPurple];
+      case WorkCategory.visualDesign:
+        return [AppColors.violetLight, AppColors.violetPop];
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case WorkCategory.illustration:
+        return Icons.auto_awesome_rounded;
+      case WorkCategory.logo:
+        return Icons.play_circle_fill_rounded;
+      case WorkCategory.packaging:
+        return Icons.inventory_2_rounded;
+      case WorkCategory.visualIdentity:
+        return Icons.palette_rounded;
+      case WorkCategory.visualDesign:
+        return Icons.brush_rounded;
+    }
+  }
 }
 
 class WorkItem {

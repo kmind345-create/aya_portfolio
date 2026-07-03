@@ -22,6 +22,15 @@ dependencies:
   # Opens mailto / social links
   url_launcher: ^6.3.0
 
+  # Supabase backend (auth, database, storage)
+  supabase_flutter: ^2.6.0
+
+  # Date formatting in the admin dashboard
+  intl: ^0.19.0
+
+  # Lets the admin dashboard upload images straight from the device
+  file_picker: ^8.1.2
+
   cupertino_icons: ^1.0.8
 
 dev_dependencies:

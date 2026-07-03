@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../services/messages_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/reveal_on_scroll.dart';
 
-class ContactSection extends StatelessWidget {
+class ContactSection extends StatefulWidget {
   final bool isMobile;
   const ContactSection({super.key, required this.isMobile});
 
+  @override
+  State<ContactSection> createState() => _ContactSectionState();
+}
+
+class _ContactSectionState extends State<ContactSection> {
   static const _whatsappNumber = '201010660135';
+  bool get isMobile => widget.isMobile;
 
   Future<void> _openWhatsApp() async {
     final uri = Uri.parse(
@@ -57,6 +64,10 @@ class ContactSection extends StatelessWidget {
             ),
             const SizedBox(height: 40),
             _WhatsAppButton(onTap: _openWhatsApp),
+            const SizedBox(height: 40),
+            Text('OR SEND A MESSAGE', style: AppFonts.label(size: 11, color: AppColors.creamDim)),
+            const SizedBox(height: 22),
+            const _MessageForm(),
             const SizedBox(height: 56),
             Wrap(
               spacing: 28,
@@ -137,6 +148,138 @@ class _WhatsAppButtonState extends State<_WhatsAppButton> {
                   size: 18, color: AppColors.bgDeep),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MessageForm extends StatefulWidget {
+  const _MessageForm();
+
+  @override
+  State<_MessageForm> createState() => _MessageFormState();
+}
+
+enum _SendStatus { idle, sending, sent, error }
+
+class _MessageFormState extends State<_MessageForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _message = TextEditingController();
+  _SendStatus _status = _SendStatus.idle;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _email.dispose();
+    _message.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _status = _SendStatus.sending);
+    try {
+      await MessagesRepository.send(
+        name: _name.text.trim(),
+        email: _email.text.trim(),
+        message: _message.text.trim(),
+      );
+      _name.clear();
+      _email.clear();
+      _message.clear();
+      setState(() => _status = _SendStatus.sent);
+    } catch (_) {
+      setState(() => _status = _SendStatus.error);
+    }
+  }
+
+  InputDecoration _decoration(String label) => InputDecoration(
+        labelText: label,
+        labelStyle: AppFonts.body(size: 13, color: AppColors.creamDim),
+        filled: true,
+        fillColor: AppColors.surface,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.08)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.violetPop),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 480,
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            TextFormField(
+              controller: _name,
+              style: AppFonts.body(size: 14, color: Colors.white),
+              decoration: _decoration('Your name'),
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              controller: _email,
+              keyboardType: TextInputType.emailAddress,
+              style: AppFonts.body(size: 14, color: Colors.white),
+              decoration: _decoration('Your email'),
+              validator: (v) =>
+                  (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+            ),
+            const SizedBox(height: 14),
+            TextFormField(
+              controller: _message,
+              maxLines: 4,
+              style: AppFonts.body(size: 14, color: Colors.white),
+              decoration: _decoration('Tell me about your project'),
+              validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ),
+            const SizedBox(height: 18),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _status == _SendStatus.sending ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.surfaceRaised,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: Colors.white.withOpacity(0.12)),
+                  ),
+                ),
+                child: _status == _SendStatus.sending
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text('Send message', style: AppFonts.label(size: 13, color: Colors.white)),
+              ),
+            ),
+            if (_status == _SendStatus.sent) ...[
+              const SizedBox(height: 12),
+              Text('Thanks — I\'ll get back to you soon!',
+                  style: AppFonts.body(size: 13, color: AppColors.orchid)),
+            ],
+            if (_status == _SendStatus.error) ...[
+              const SizedBox(height: 12),
+              Text('Something went wrong — try WhatsApp instead?',
+                  style: AppFonts.body(size: 13, color: Colors.redAccent)),
+            ],
+          ],
         ),
       ),
     );

@@ -1,10 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../data/work_items.dart';
+import '../models/project.dart';
+import '../services/projects_repository.dart';
 import '../theme/app_theme.dart';
 import '../widgets/reveal_on_scroll.dart';
 import '../widgets/section_heading.dart';
 import '../widgets/tilt_3d_card.dart';
+
+/// Turns the bundled placeholder [kWorkItems] into [Project]s, used as a
+/// fallback so the grid isn't empty before Supabase is configured (or if a
+/// fetch fails).
+List<Project> _fallbackProjects() => List.generate(kWorkItems.length, (i) {
+      final w = kWorkItems[i];
+      return Project(
+        id: 'local-$i',
+        title: w.title,
+        client: w.client,
+        category: w.category,
+        imageUrl: w.image,
+        sortOrder: i,
+      );
+    });
 
 class PortfolioSection extends StatefulWidget {
   final bool isMobile;
@@ -21,10 +38,35 @@ class PortfolioSection extends StatefulWidget {
 
 class _PortfolioSectionState extends State<PortfolioSection> {
   WorkCategory? _filter;
+  late Future<List<Project>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = ProjectsRepository.fetchAll().then(
+      (projects) => projects.isEmpty ? _fallbackProjects() : projects,
+      onError: (_) => _fallbackProjects(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final items = kWorkItems
+    return FutureBuilder<List<Project>>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(vertical: 80),
+            child: Center(child: CircularProgressIndicator(color: AppColors.violetPop)),
+          );
+        }
+        return _buildGrid(context, snapshot.data ?? const <Project>[]);
+      },
+    );
+  }
+
+  Widget _buildGrid(BuildContext context, List<Project> allItems) {
+    final items = allItems
         .where((w) => _filter == null || w.category == _filter)
         .toList(growable: false);
 
@@ -114,7 +156,7 @@ class _PortfolioSectionState extends State<PortfolioSection> {
 }
 
 class _WorkCard extends StatefulWidget {
-  final WorkItem item;
+  final Project item;
   const _WorkCard({required this.item});
 
   @override
@@ -135,28 +177,37 @@ class _WorkCardState extends State<_WorkCard> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: item.gradient,
+            colors: item.category.gradient,
           ),
         ),
         child: Stack(
           children: [
             // Real artwork, when available, fills the card behind the
-            // gradient/scrim so text stays legible on top of it.
-            if (item.image != null)
+            // gradient/scrim so text stays legible on top of it. Supports
+            // both a network URL (from Supabase Storage) and a bundled
+            // local asset path.
+            if (item.imageUrl != null)
               Positioned.fill(
-                child: Image.asset(
-                  item.image!,
-                  fit: BoxFit.cover,
-                ),
+                child: item.isNetworkImage
+                    ? Image.network(
+                        item.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      )
+                    : Image.asset(
+                        item.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                      ),
               )
             else
               // Decorative oversized icon ghosted in the background,
-              // used only for placeholder tiles without real artwork.
+              // used only for projects without artwork attached yet.
               Positioned(
                 right: -20,
                 bottom: -20,
                 child: Icon(
-                  item.icon,
+                  item.category.icon,
                   size: 160,
                   color: Colors.white.withOpacity(0.12),
                 ),
