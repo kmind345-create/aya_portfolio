@@ -74,64 +74,9 @@ class WorkItem {
   });
 }
 
-/// Every entry below renders its actual uploaded artwork via Image.asset
-/// inside the Tilt3DCard (the earlier placeholder/empty tiles were removed).
-const List<WorkItem> kWorkItems = [
-  WorkItem(
-    title: 'Stay Glowing in the Dark',
-    client: 'Illustration art',
-    category: WorkCategory.illustration,
-    gradient: [AppColors.violetDeep, AppColors.violetMid],
-    icon: Icons.auto_awesome_rounded,
-    image: 'assets/images/illustration_art.jpg',
-  ),
-  WorkItem(
-    title: 'Media Whale',
-    client: 'Logo design',
-    category: WorkCategory.logo,
-    gradient: [AppColors.violetPop, AppColors.violetDeep],
-    icon: Icons.play_circle_fill_rounded,
-    image: 'assets/images/logo_design.png',
-  ),
-  WorkItem(
-    title: 'Bitza Bil Kosour',
-    client: 'Packaging illustration',
-    category: WorkCategory.packaging,
-    gradient: [AppColors.orchid, AppColors.violetLight],
-    icon: Icons.inventory_2_rounded,
-    image: 'assets/images/packing_illustration.png',
-  ),
-  WorkItem(
-    title: 'Marionette Notebook',
-    client: 'Visual identity',
-    category: WorkCategory.visualIdentity,
-    gradient: [AppColors.violetLight, AppColors.bgPurple],
-    icon: Icons.palette_rounded,
-    image: 'assets/images/visual_identity.png',
-  ),
-  // ---- Newly added real artwork, categorized by file name ----
-  WorkItem(
-    title: 'Qesma W Ta3zeeb',
-    client: 'Packing',
-    category: WorkCategory.packaging,
-    gradient: [AppColors.violetDeep, AppColors.violetLight],
-    icon: Icons.inventory_2_rounded,
-    image: 'assets/images/packing.png',
-  ),
-  WorkItem(
-    title: 'Sultan Al Asal Promo',
-    client: 'Visual identity',
-    category: WorkCategory.visualIdentity,
-    gradient: [AppColors.orchid, AppColors.bgPurple],
-    icon: Icons.palette_rounded,
-    image: 'assets/images/visual_identity_promo.png',
-  ),
-  WorkItem(
-    title: 'Soweqa',
-    client: 'Visual',
-    category: WorkCategory.visualDesign,
-    gradient: [AppColors.violetLight, AppColors.violetPop],
-    icon: Icons.brush_rounded,
-    image: 'assets/images/visual.png',
-  ),
-];
+/// Intentionally empty. This used to hold bundled demo/placeholder projects
+/// (with images shipped inside assets/images) so the grid wasn't empty
+/// before the client had added anything from Supabase. Now that the client
+/// manages everything from /admin, there's nothing hard-coded here — the
+/// portfolio grid only ever shows what's actually in the `projects` table.
+const List<WorkItem> kWorkItems = [];
